@@ -11,6 +11,7 @@ function App() {
 
   const mapElement = useRef();
   mapElement.current = map;
+
   const projection = new Projection({
     code: 'EPSG:3301',
     units: 'm'
@@ -39,7 +40,7 @@ function App() {
       });
       setMap(newMap);
     }
-  }, [setMap, projection]);
+  }, [map, setMap, projection]);
 
   return <div ref={mapElement} id="map"></div>;
 }
