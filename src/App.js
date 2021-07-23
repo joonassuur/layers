@@ -34,6 +34,7 @@ function App() {
         "featurePrefix=maaamet&" +
         "geometryPropertyName=geom&" +
         "maxfeatures=100&" +
+        "outputFormat=application/json&srsname=EPSG:3301&" +
         'bbox=' +
         extent.join(",") +
         ",EPSG:3301"
@@ -42,7 +43,6 @@ function App() {
     format: new GeoJSON({ dataProjection: "EPSG:3301" }),
     strategy: bboxStrategy,
   });
-  
   const vector = new VectorLayer({
     source: vectorSource,
     style: new Style({
@@ -71,7 +71,7 @@ function App() {
     if (!map) {
       const newMap = new Map({
         target: "map",
-        layers: [vector, layer],
+        layers: [layer, vector],
         view: new View({
           center: [540000, 6580000],
           projection,
