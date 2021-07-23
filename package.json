@@ -1,5 +1,6 @@
 {
   "name": "openlayers",
+  "homepage": "https://joonassuur.github.io/layers/",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

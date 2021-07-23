@@ -73,9 +73,9 @@ function App() {
         target: "map",
         layers: [layer, vector],
         view: new View({
-          center: [540000, 6580000],
+          center: [550000, 6520000],
           projection,
-          zoom: 15,
+          zoom: 10,
         }),
       });
       setMap(newMap);
