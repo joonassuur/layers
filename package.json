@@ -1,6 +1,5 @@
 {
   "name": "openlayers",
-  "homepage": "http://https://joonassuur.github.io/layers/",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -8,6 +7,7 @@
     "@testing-library/react": "^11.2.7",
     "@testing-library/user-event": "^12.8.3",
     "ol": "^6.6.1",
+    "proj4": "^2.7.5",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-scripts": "4.0.3",
