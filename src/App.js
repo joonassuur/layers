@@ -3,7 +3,7 @@ import "ol/ol.css";
 import "./App.css";
 import { Map, View } from "ol";
 import { get } from "ol/proj";
-import GeoJSON from 'ol/format/GeoJSON';
+import GeoJSON from "ol/format/GeoJSON";
 import ImageWMS from "ol/source/ImageWMS";
 import { Stroke, Style } from "ol/style";
 import {
@@ -26,8 +26,6 @@ function App() {
   const projection = get("EPSG:3301");
 
   const vectorSource = new VectorSource({
-    format: new GeoJSON({dataProjection: 'EPSG:3301'}),
-    projection,
     url: function(extent) {
       return (
         "https://gsavalik.envir.ee/geoserver/maaamet/ows?" +
@@ -35,12 +33,16 @@ function App() {
         "typeName=ky_kehtiv&" +
         "featurePrefix=maaamet&" +
         "geometryPropertyName=geom&" +
-        "maxfeatures=100" +
+        "maxfeatures=100&" +
+        'bbox=' +
         extent.join(",") +
         ",EPSG:3301"
       );
     },
+    format: new GeoJSON({ dataProjection: "EPSG:3301" }),
+    strategy: bboxStrategy,
   });
+  
   const vector = new VectorLayer({
     source: vectorSource,
     style: new Style({
@@ -52,32 +54,28 @@ function App() {
   });
   const layer = new TileLayer({
     source: new XYZ({
-      projection: 'EPSG:3301',
+      projection: "EPSG:3301",
       url: "https://tiles.maaamet.ee/tm/tms/1.0.0/foto/{z}/{x}/{-y}.jpg&ASUTUS=MAAAMET&KESKKOND=LIVE&IS=XGIS",
       tileGrid: new TileGrid({
         extent: [40500, 5993000, 1064500, 7017000],
         minZoom: 3,
         resolutions: [
-          4000, 2000, 1000, 500, 250, 125, 62.5, 31.25, 15.625, 7.8125,
-          3.90625, 1.953125, 0.9765625, 0.48828125,
+          4000, 2000, 1000, 500, 250, 125, 62.5, 31.25, 15.625, 7.8125, 3.90625,
+          1.953125, 0.9765625, 0.48828125,
         ],
       }),
     }),
-
   });
-
 
   useEffect(() => {
     if (!map) {
       const newMap = new Map({
         target: "map",
-        layers: [
-          vector,
-          layer,
-        ],
+        layers: [vector, layer],
         view: new View({
-          center: [550000, 6520000],
-          projection: 'EPSG:3301',
+          center: [540000, 6580000],
+          projection,
+          zoom: 15,
         }),
       });
       setMap(newMap);
