@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import "ol/ol.css";
 import "./App.css";
-import { Map, View } from "ol";
+import { Map, View, Overlay } from "ol";
 import { get } from "ol/proj";
-import GeoJSON from "ol/format/GeoJSON";
-import ImageWMS from "ol/source/ImageWMS";
-import { Stroke, Style } from "ol/style";
+import { GeoJSON, WFS } from "ol/format";
+import { Stroke, Style, Fill } from "ol/style";
+import { transform } from 'ol/proj';
 import {
   Image as ImageLayer,
   Tile as TileLayer,
@@ -19,6 +19,7 @@ import XYZ from "ol/source/XYZ";
 
 function App() {
   const [map, setMap] = useState();
+  const [popup, setPopup] = useState();
 
   const mapElement = useRef();
   mapElement.current = map;
@@ -26,7 +27,7 @@ function App() {
   const projection = get("EPSG:3301");
 
   const vectorSource = new VectorSource({
-    url: function(extent) {
+    url: function (extent) {
       return (
         "https://gsavalik.envir.ee/geoserver/maaamet/ows?" +
         "service=WFS&version=1.0.0&request=GetFeature&" +
@@ -49,6 +50,9 @@ function App() {
       stroke: new Stroke({
         color: "rgba(0, 0, 255, 1.0)",
         width: 2,
+      }),
+      fill: new Fill({
+        color: "rgba(0, 0, 0, 0)",
       }),
     }),
   });
@@ -80,9 +84,40 @@ function App() {
       });
       setMap(newMap);
     }
+
+    if (map) {
+      map.on('click', (e) => {
+        map.forEachFeatureAtPixel(e.pixel, (feature, layer) => {
+          if (feature) {
+            const newPopup = new Overlay({
+              element: document.getElementById('popup'),
+              stopEvent: false,
+            })
+            const address = feature.values_.l_aadress
+            console.log('feat', newPopup)
+            newPopup.setPosition(e.coordinate);
+            map.addOverlay(newPopup);
+            setPopup({ address })
+          }
+        })
+      })
+    }
   }, [map, setMap, projection, vector, layer]);
 
-  return <div ref={mapElement} id="map"></div>;
+  return (
+    <>
+      {
+        <div id="popup">
+          <div>
+            {
+              popup?.address
+            }
+          </div>
+        </div>
+      }
+      <div ref={mapElement} id="map"></div>
+    </>
+  );
 }
 
 export default App;
