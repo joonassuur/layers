@@ -92,60 +92,58 @@ function App() {
     return () => mapObj.setTarget(undefined);
   }, []);
 
-  if (map) {
-    map.on("click", (e) => {
-      const coords = e.coordinate;
-      const featureRequest = new WFS().writeGetFeature({
-        baseUrl: "https://gsavalik.envir.ee/geoserver/maaamet/ows?",
-        featureNS: "maaamet",
-        srsName: "EPSG:3301",
-        featurePrefix: "maaamet",
-        propertyNames: ["geom", "l_aadress", "pind_m2"],
-        featureTypes: ["ky_kehtiv"],
-        outputFormat: "application/json",
-        filter: or(
-          intersects("geom", new Point(coords)),
-          within("geom", new Point(coords))
-        ),
-      });
-
-      fetch("https://gsavalik.envir.ee/geoserver/maaamet/ows", {
-        method: "POST",
-        body: new XMLSerializer().serializeToString(featureRequest),
-      })
-        .then(function (response) {
-          return response.json();
-        })
-        .then(function (json) {
-          // const featureId = json.features[0].id
-          // const checkIfFeatureExists = vector.getSource().getFeatures(featureId);
-          map.removeLayer(vector);
-          vectorSource.clear();
-          const newFeature = new GeoJSON().readFeatures(json);
-          vectorSource.addFeatures(newFeature);
-          map.getView().fit(vectorSource.getExtent());
-          map.addLayer(vector);
-
-          const address = json.features[0].properties.l_aadress;
-          const size = json.features[0].properties.pind_m2;
-          const newPopup = new Overlay({
-            element: document.getElementById('popup'),
-            stopEvent: false,
-          })
-          newPopup.setPosition(e.coordinate);
-          map.addOverlay(newPopup);
-          setPopup({ address, size })
-
+  useEffect(() => {
+    if (map) {
+      map.on("click", (e) => {
+        const coords = e.coordinate;
+        const featureRequest = new WFS().writeGetFeature({
+          baseUrl: "https://gsavalik.envir.ee/geoserver/maaamet/ows?",
+          featureNS: "maaamet",
+          srsName: "EPSG:3301",
+          featurePrefix: "maaamet",
+          propertyNames: ["geom", "l_aadress", "pind_m2"],
+          featureTypes: ["ky_kehtiv"],
+          outputFormat: "application/json",
+          filter: or(
+            intersects("geom", new Point(coords)),
+            within("geom", new Point(coords))
+          ),
         });
-    });
-  }
+
+        fetch("https://gsavalik.envir.ee/geoserver/maaamet/ows", {
+          method: "POST",
+          body: new XMLSerializer().serializeToString(featureRequest),
+        })
+          .then(function (response) {
+            return response.json();
+          })
+          .then(function (json) {
+            // const featureId = json.features[0].id
+            // const checkIfFeatureExists = vector.getSource().getFeatures(featureId);
+            map.removeLayer(vector);
+            vectorSource.clear();
+            const newFeature = new GeoJSON().readFeatures(json);
+            vectorSource.addFeatures(newFeature);
+            map.getView().fit(vectorSource.getExtent());
+            map.addLayer(vector);
+            const newPopup = new Overlay({
+              element: document.getElementById("popup"),
+            });
+            
+            map.addOverlay(newPopup);
+            const address = json.features[0].properties.l_aadress;
+            newPopup.setPosition(e.coordinate);
+            setPopup({ address });
+          });
+      });
+    }
+  }, [map]);
 
   return (
     <>
       {
         <div id="popup">
           <div>{popup?.address}</div>
-          <div>{popup?.size}</div>
         </div>
       }
       <div ref={mapElement} id="map"></div>
