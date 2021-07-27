@@ -4,3 +4,7 @@
   width: 100%;
   font-family: sans-serif;
 }
+#popup {
+  background-color: white;
+  padding: 40px;
+}
