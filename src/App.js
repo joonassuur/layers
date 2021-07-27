@@ -5,7 +5,10 @@ import { Map, View, Overlay } from "ol";
 import { get } from "ol/proj";
 import { GeoJSON, WFS } from "ol/format";
 import { Stroke, Style, Fill } from "ol/style";
+import { toStringXY, toStringHDMS } from "ol/coordinate";
 import { transform } from "ol/proj";
+import { add } from "ol/coordinate";
+import { Point, Polygon } from "ol/geom";
 import {
   Image as ImageLayer,
   Tile as TileLayer,
@@ -15,6 +18,10 @@ import {
   and as andFilter,
   equalTo as equalToFilter,
   like as likeFilter,
+  or,
+  intersects,
+  within,
+  contains,
 } from "ol/format/filter";
 import TileGrid from "ol/tilegrid/TileGrid";
 import { bbox as bboxStrategy } from "ol/loadingstrategy";
@@ -69,6 +76,7 @@ function App() {
     });
     setMap(mapObj);
   }, []);
+
   useEffect(() => {
     const mapObj = new Map({
       layers: [layer, vector],
@@ -84,21 +92,28 @@ function App() {
     return () => mapObj.setTarget(undefined);
   }, []);
 
-  const handleMapClick = () => {
-    if (map !== undefined) {
+  if (map) {
+    map.on("click", (e) => {
+      // map.forEachFeatureAtPixel(e.pixel, (feature, layer) => {
+      //   console.log(feature);
+      // });
+      const coords = e.coordinate;
       const featureRequest = new WFS().writeGetFeature({
         baseUrl: "https://gsavalik.envir.ee/geoserver/maaamet/ows?",
         featureNS: "maaamet",
-        type: "WFS",
-        version: "1.0.0",
+        srsName: "EPSG:3301",
         featurePrefix: "maaamet",
+        propertyNames: ["geom"],
         featureTypes: ["ky_kehtiv"],
         outputFormat: "application/json",
-        geometryPropertyName: "geom",
-        filter: andFilter(
-          likeFilter("l_aadress", "Soku tee 48a"),
-          equalToFilter("l_aadress", "Soku tee 48a")
+        filter: or(
+          intersects("geom", new Point(coords)),
+          within("geom", new Point(coords))
         ),
+        // filter: or(
+        //   intersects("geom", new Point(coords)),
+        //   within("geom", new Point(coords))
+        // ),
       });
 
       fetch("https://gsavalik.envir.ee/geoserver/maaamet/ows", {
@@ -109,20 +124,18 @@ function App() {
           return response.json();
         })
         .then(function (json) {
-          const getExistingFeatures = vector.getSource().getFeatures();
+          // const featureId = json.features[0].id
+          // const checkIfFeatureExists = vector.getSource().getFeatures(featureId);
+          map.removeLayer(vector);
+          vectorSource.clear();
           const newFeature = new GeoJSON().readFeatures(json);
-          const doesFeatureExist = getExistingFeatures.findIndex(
-            (feature) => feature.id === newFeature[0].id
-          );
-          if (doesFeatureExist !== -1) {
-            return;
-          }
+          console.log(newFeature, 'newFeature')
           vectorSource.addFeatures(newFeature);
           map.getView().fit(vectorSource.getExtent());
           map.addLayer(vector);
         });
-    }
-  };
+    });
+  }
 
   return (
     <>
@@ -131,7 +144,7 @@ function App() {
           <div>{popup?.address}</div>
         </div>
       }
-      <div ref={mapElement} id="map" onClick={handleMapClick}></div>
+      <div ref={mapElement} id="map"></div>
     </>
   );
 }
