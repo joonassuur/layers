@@ -21,9 +21,9 @@ const App: React.FC = () => {
     pind_m2: "",
   };
   const [map, setMap] = useState<Map>(new Map({}));
-  const [popupData, setPopupData] = useState(initialPopupDataObj);
+  const [popupData, setPopupData] = useState(initialPopupDataObj || undefined);
 
-  const mapElement = useRef<HTMLDivElement | null>(null);
+  const mapElement = useRef<HTMLDivElement>(null);
 
   const projection = get("EPSG:3301");
 
