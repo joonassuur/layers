@@ -14,11 +14,16 @@ import Popup from "./Popup/Popup";
 import "ol/ol.css";
 import "./App.scss";
 
-function App() {
-  const [map, setMap] = useState(undefined);
-  const [popupData, setPopupData] = useState(undefined);
+const App: React.FC = () => {
+  const initialPopupDataObj = {
+    l_aadress: "",
+    ay_nimi: "",
+    pind_m2: "",
+  };
+  const [map, setMap] = useState<Map>(new Map({}));
+  const [popupData, setPopupData] = useState(initialPopupDataObj);
 
-  const mapElement = useRef();
+  const mapElement = useRef<HTMLDivElement | null>(null);
 
   const projection = get("EPSG:3301");
 
@@ -50,12 +55,14 @@ function App() {
     }),
   });
 
-  const modifyTooltip = (coords) => {
+  const modifyTooltip = (coords?: number[]) => {
     const newPopup = new Overlay({
-      element: document.getElementById("popup"),
+      element: document.getElementById("popup") || undefined,
     });
     map.addOverlay(newPopup);
-    newPopup.setPosition(coords);
+    if (coords) {
+      newPopup.setPosition(coords);
+    }
   };
 
   useEffect(() => {
@@ -80,7 +87,7 @@ function App() {
         minZoom: 9,
       }),
     });
-    mapObj.setTarget(mapElement.current);
+    mapObj.setTarget(mapElement.current || '');
 
     setMap(mapObj);
     return () => mapObj.setTarget(undefined);
@@ -104,7 +111,7 @@ function App() {
           map.addLayer(vector);
           modifyTooltip(coords);
         } else {
-          setPopupData(undefined);
+          setPopupData(initialPopupDataObj);
           modifyTooltip();
         }
       });
@@ -117,6 +124,6 @@ function App() {
       <div ref={mapElement} id="map"></div>
     </>
   );
-}
+};
 
 export default App;

@@ -1,7 +1,16 @@
 import React from "react";
 import "./Popup.scss";
 
-const Popup = ({ data }) => {
+interface DataObj {
+  l_aadress: string,
+  ay_nimi: string,
+  pind_m2: string,
+}
+interface Props {
+  data: DataObj;
+}
+
+const Popup: React.FC<Props> = ({ data }) => {
   return (
     <div id="popup">
       {data && (
