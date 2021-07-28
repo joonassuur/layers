@@ -2,9 +2,9 @@ import React from "react";
 import "./Popup.scss";
 
 interface DataObj {
-  l_aadress: string;
-  ay_nimi: string;
-  pind_m2: string;
+  l_aadress?: string;
+  ay_nimi?: string;
+  pind_m2?: string;
 }
 interface Props {
   data: DataObj;

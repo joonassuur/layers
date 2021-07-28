@@ -20,11 +20,10 @@ const App: React.FC = () => {
     ay_nimi: "",
     pind_m2: "",
   };
-  const [map, setMap] = useState<Map>(new Map({}));
+  const map = new Map({});
   const [popupData, setPopupData] = useState(initialPopupDataObj || undefined);
 
   const mapElement = useRef<HTMLDivElement>(null);
-
   const projection = get("EPSG:3301");
 
   const vectorSource = new VectorSource();
@@ -54,6 +53,12 @@ const App: React.FC = () => {
       }),
     }),
   });
+  const view = new View({
+    center: [550000, 6520000],
+    projection,
+    zoom: 9,
+    minZoom: 9,
+  });
 
   const modifyTooltip = (coords?: number[]) => {
     const newPopup = new Overlay({
@@ -64,34 +69,16 @@ const App: React.FC = () => {
       newPopup.setPosition(coords);
     }
   };
+  map.addLayer(layer);
+  map.setView(view);
+  
+  const setMapTarget = () => {
+    map.setTarget(mapElement.current || "");
+    return () => map.setTarget("");
+  };
 
-  useEffect(() => {
-    const mapObj = new Map({
-      layers: [layer, vector],
-      view: new View({
-        center: [550000, 6520000],
-        projection,
-        zoom: 9,
-      }),
-    });
-    setMap(mapObj);
-  }, []);
-
-  useEffect(() => {
-    const mapObj = new Map({
-      layers: [layer, vector],
-      view: new View({
-        center: [550000, 6520000],
-        projection,
-        zoom: 9,
-        minZoom: 9,
-      }),
-    });
-    mapObj.setTarget(mapElement.current || '');
-
-    setMap(mapObj);
-    return () => mapObj.setTarget(undefined);
-  }, []);
+  const useMountEffect = (fun: React.EffectCallback) => useEffect(fun, []);
+  useMountEffect(setMapTarget);
 
   useEffect(() => {
     if (map) {
@@ -116,7 +103,7 @@ const App: React.FC = () => {
         }
       });
     }
-  }, [map]);
+  });
 
   return (
     <>

@@ -2,10 +2,9 @@ import { WFS } from "ol/format";
 import { or, intersects, within } from "ol/format/filter";
 import { Point } from "ol/geom";
 
-const featureRequestObject = (coords) => {
+const featureRequestObject = (coords: number[]) => {
   return new WFS().writeGetFeature({
-    baseUrl: "https://gsavalik.envir.ee/geoserver/maaamet/ows?",
-    featureNS: "maaamet",
+    featureNS: "https://gsavalik.envir.ee/geoserver/maaamet/ows?",
     srsName: "EPSG:3301",
     featurePrefix: "maaamet",
     propertyNames: ["geom", "l_aadress", "pind_m2", "ay_nimi"],
@@ -18,7 +17,7 @@ const featureRequestObject = (coords) => {
   });
 };
 
-const featureRequest = async (coords) => {
+const featureRequest = async (coords: number[]) => {
   try {
     const response = await fetch(
       "https://gsavalik.envir.ee/geoserver/maaamet/ows",
