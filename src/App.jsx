@@ -1,14 +1,14 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Map, View, Overlay } from "ol";
 import { get } from "ol/proj";
-import { GeoJSON, WFS } from "ol/format";
-import { Stroke, Style, Fill } from "ol/style";
-import { Point } from "ol/geom";
+import { GeoJSON } from "ol/format";
+import { Stroke, Style } from "ol/style";
 import { Tile as TileLayer, Vector as VectorLayer } from "ol/layer";
-import { or, intersects, within, contains } from "ol/format/filter";
 import TileGrid from "ol/tilegrid/TileGrid";
 import VectorSource from "ol/source/Vector";
 import XYZ from "ol/source/XYZ";
+
+import featureRequest from "./requests";
 
 import Popup from "./Popup/Popup";
 import "ol/ol.css";
@@ -16,7 +16,7 @@ import "./App.scss";
 
 function App() {
   const [map, setMap] = useState(undefined);
-  const [popupData, setPopupData] = useState();
+  const [popupData, setPopupData] = useState(undefined);
 
   const mapElement = useRef();
 
@@ -50,6 +50,14 @@ function App() {
     }),
   });
 
+  const modifyTooltip = (coords) => {
+    const newPopup = new Overlay({
+      element: document.getElementById("popup"),
+    });
+    map.addOverlay(newPopup);
+    newPopup.setPosition(coords);
+  };
+
   useEffect(() => {
     const mapObj = new Map({
       layers: [layer, vector],
@@ -78,64 +86,26 @@ function App() {
     return () => mapObj.setTarget(undefined);
   }, []);
 
-  const featureRequestObject = (coords) => {
-    return new WFS().writeGetFeature({
-      baseUrl: "https://gsavalik.envir.ee/geoserver/maaamet/ows?",
-      featureNS: "maaamet",
-      srsName: "EPSG:3301",
-      featurePrefix: "maaamet",
-      propertyNames: ["geom", "l_aadress", "pind_m2"],
-      featureTypes: ["ky_kehtiv"],
-      outputFormat: "application/json",
-      filter: or(
-        intersects("geom", new Point(coords)),
-        within("geom", new Point(coords))
-      ),
-    });
-  };
-
-  const featureRequest = async (coords) => {
-    try {
-      const response = await fetch(
-        "https://gsavalik.envir.ee/geoserver/maaamet/ows",
-        {
-          method: "POST",
-          body: new XMLSerializer().serializeToString(
-            featureRequestObject(coords)
-          ),
-        }
-      );
-      return response.json();
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const createPopup = (json, coords) => {
-    const newPopup = new Overlay({
-      element: document.getElementById("popup"),
-    });
-    map.addOverlay(newPopup);
-    const address = json.features[0].properties.l_aadress;
-    const areaSize = json.features[0].properties.pind_m2;
-    newPopup.setPosition(coords);
-    setPopupData({ address, areaSize });
-  };
-
   useEffect(() => {
     if (map) {
       map.on("click", async (event) => {
         const coords = event.coordinate;
         map.removeLayer(vector);
         vectorSource.clear();
-        const json = await featureRequest(coords);
-        const newFeature = new GeoJSON().readFeatures(json);
+        const response = await featureRequest(coords);
+        const newFeature = new GeoJSON().readFeatures(response);
         if (newFeature.length) {
+          const responseProps = response.features[0].properties;
+          const { l_aadress, pind_m2, ay_nimi } = responseProps;
+          setPopupData({ l_aadress, pind_m2, ay_nimi });
           vectorSource.addFeatures(newFeature);
           // zooms to vector:
           // map.getView().fit(vectorSource.getExtent());
           map.addLayer(vector);
-          createPopup(json, coords);
+          modifyTooltip(coords);
+        } else {
+          setPopupData(undefined);
+          modifyTooltip();
         }
       });
     }

@@ -4,14 +4,21 @@ import "./Popup.scss";
 const Popup = ({ data }) => {
   return (
     <div id="popup">
-      <div className="address-field">
-        <div className="address-name">Aadress: </div>
-        <div className="size-value">{data?.address}</div>
-      </div>
-      <div className="size-field">
-        <div className="size-name">Pindala: </div>
-        <div className="size-value">{data?.areaSize} m2</div>
-      </div>
+      {data && (
+        <>
+          <div className="address-field">
+            <div className="address-name">Aadress: </div>
+            <div className="address-value">
+              <div>{data?.l_aadress}</div>
+              <div>{data?.ay_nimi}</div>
+            </div>
+          </div>
+          <div className="size-field">
+            <div className="size-name">Pindala: </div>
+            <div className="size-value">{data?.pind_m2} m2</div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
