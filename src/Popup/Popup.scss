@@ -1,0 +1,19 @@
+#popup {
+  position: absolute;
+  background-color: white;
+  padding: 10px;
+  white-space: nowrap;
+  border-radius: 5px;
+  .size-field {
+    margin-top: 5px;
+  }
+  .address-name,
+  .size-name {
+    font-weight: bold;
+  }
+  .address-value,
+  .size-value {
+    font-size: 14px;
+    margin-top: 2px;
+  }
+}
