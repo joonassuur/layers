@@ -7,6 +7,8 @@ import { Tile as TileLayer, Vector as VectorLayer } from "ol/layer";
 import TileGrid from "ol/tilegrid/TileGrid";
 import VectorSource from "ol/source/Vector";
 import XYZ from "ol/source/XYZ";
+import ImageWMS from "ol/source/ImageWMS";
+import { Image as ImageLayer } from "ol/layer";
 
 import featureRequest from "./requests";
 
@@ -39,7 +41,13 @@ const App: React.FC = () => {
       // }),
     }),
   });
-  const layer = new TileLayer({
+  const view = new View({
+    center: [550000, 6520000],
+    projection,
+    zoom: 9,
+    minZoom: 9,
+  });
+  const tileLayer = new TileLayer({
     source: new XYZ({
       projection: "EPSG:3301",
       url: "https://tiles.maaamet.ee/tm/tms/1.0.0/foto/{z}/{x}/{-y}.jpg&ASUTUS=MAAAMET&KESKKOND=LIVE&IS=XGIS",
@@ -53,11 +61,14 @@ const App: React.FC = () => {
       }),
     }),
   });
-  const view = new View({
-    center: [550000, 6520000],
-    projection,
-    zoom: 9,
-    minZoom: 9,
+  const imageLayer = new ImageLayer({
+    source: new ImageWMS({
+      url: "http://kaart.maaamet.ee/wms/alus?",
+      params: {
+        LAYERS: "MA-ALUS",
+        VERSION: "1.1.1",
+      },
+    }),
   });
 
   const modifyTooltip = (coords?: number[]) => {
@@ -69,12 +80,24 @@ const App: React.FC = () => {
       newPopup.setPosition(coords);
     }
   };
-  map.addLayer(layer);
+  map.addLayer(tileLayer);
   map.setView(view);
-  
+
   const setMapTarget = () => {
     map.setTarget(mapElement.current || "");
     return () => map.setTarget("");
+  };
+
+  const removeLayers = () => {
+    const layers = [...map.getLayers().getArray()];
+    layers.forEach((layer) => map.removeLayer(layer));
+  };
+
+  const activateLayer = (
+    layer: ImageLayer<ImageWMS> | TileLayer<XYZ>
+  ): void => {
+    removeLayers();
+    map.addLayer(layer);
   };
 
   const useMountEffect = (fun: React.EffectCallback) => useEffect(fun, []);
@@ -107,6 +130,10 @@ const App: React.FC = () => {
 
   return (
     <>
+      <div className="button-overlay">
+        <button onClick={() => activateLayer(imageLayer)}>image layer</button>
+        <button onClick={() => activateLayer(tileLayer)}>tile layer</button>
+      </div>
       <Popup data={popupData}></Popup>
       <div ref={mapElement} id="map"></div>
     </>
