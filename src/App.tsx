@@ -145,7 +145,6 @@ const App: React.FC = () => {
         <button onClick={() => activateLayer(tileLayer)}>tile layer</button>
       </div>
       <Popup data={popupData}></Popup>
-
       <MapElement mapElement={mapElement} mapClick={()=>handleMapClick()}></MapElement>
     </>
   );
