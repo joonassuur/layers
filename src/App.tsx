@@ -13,6 +13,7 @@ import { Image as ImageLayer } from "ol/layer";
 import featureRequest from "./requests";
 
 import Popup from "./Popup/Popup";
+import MapElement from "./MapElement/MapElement";
 import "ol/ol.css";
 import "./App.scss";
 
@@ -22,7 +23,7 @@ const App: React.FC = () => {
     ay_nimi: "",
     pind_m2: "",
   };
-  const map = new Map({});
+  const [map] = useState(new Map({}));
   const [popupData, setPopupData] = useState(initialPopupDataObj || undefined);
 
   const mapElement = useRef<HTMLDivElement>(null);
@@ -80,11 +81,11 @@ const App: React.FC = () => {
       newPopup.setPosition(coords);
     }
   };
-  map.addLayer(tileLayer);
-  map.setView(view);
 
-  const setMapTarget = () => {
+  const initMap = () => {
     map.setTarget(mapElement.current || "");
+    map.addLayer(tileLayer);
+    map.setView(view);
     return () => map.setTarget("");
   };
 
@@ -101,7 +102,7 @@ const App: React.FC = () => {
   };
 
   const useMountEffect = (fun: React.EffectCallback) => useEffect(fun, []);
-  useMountEffect(setMapTarget);
+  useMountEffect(initMap);
 
   useEffect(() => {
     if (map) {
@@ -135,7 +136,8 @@ const App: React.FC = () => {
         <button onClick={() => activateLayer(tileLayer)}>tile layer</button>
       </div>
       <Popup data={popupData}></Popup>
-      <div ref={mapElement} id="map"></div>
+
+      <MapElement mapElement={mapElement}></MapElement>
     </>
   );
 };
