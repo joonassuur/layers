@@ -121,7 +121,8 @@ const App: React.FC = () => {
   }, [map, setCoords, vector, vectorSource]);
 
   const handleMapClick = async () => {
-    // TODO: Fix console errors
+    setCoords([])
+    if (coords.length) {
       const response = await featureRequest(coords);
       const newFeature = new GeoJSON().readFeatures(response);
       if (newFeature.length) {
@@ -137,6 +138,7 @@ const App: React.FC = () => {
         setPopupData(initialPopupDataObj);
         modifyTooltip();
       }
+    }
   };
 
   return (
