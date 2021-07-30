@@ -121,21 +121,22 @@ const App: React.FC = () => {
   }, [map, setCoords, vector, vectorSource]);
 
   const handleMapClick = async () => {
-    const response = await featureRequest(coords);
-    const newFeature = new GeoJSON().readFeatures(response);
-    if (newFeature.length) {
-      const responseProps = response.features[0].properties;
-      const { l_aadress, pind_m2, ay_nimi } = responseProps;
-      setPopupData({ l_aadress, pind_m2, ay_nimi });
-      vectorSource.addFeatures(newFeature);
-      // zooms to vector:
-      // map.getView().fit(vectorSource.getExtent());
-      map.addLayer(vector);
-      modifyTooltip(coords);
-    } else {
-      setPopupData(initialPopupDataObj);
-      modifyTooltip();
-    }
+    // TODO: Fix console errors
+      const response = await featureRequest(coords);
+      const newFeature = new GeoJSON().readFeatures(response);
+      if (newFeature.length) {
+        const responseProps = response.features[0].properties;
+        const { l_aadress, pind_m2, ay_nimi } = responseProps;
+        setPopupData({ l_aadress, pind_m2, ay_nimi });
+        vectorSource.addFeatures(newFeature);
+        // zooms to vector:
+        // map.getView().fit(vectorSource.getExtent());
+        map.addLayer(vector);
+        modifyTooltip(coords);
+      } else {
+        setPopupData(initialPopupDataObj);
+        modifyTooltip();
+      }
   };
 
   return (
@@ -145,7 +146,10 @@ const App: React.FC = () => {
         <button onClick={() => activateLayer(tileLayer)}>tile layer</button>
       </div>
       <Popup data={popupData}></Popup>
-      <MapElement mapElement={mapElement} mapClick={()=>handleMapClick()}></MapElement>
+      <MapElement
+        mapElement={mapElement}
+        mapClick={() => handleMapClick()}
+      ></MapElement>
     </>
   );
 };
