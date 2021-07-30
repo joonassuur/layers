@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { Map, View, Overlay } from "ol";
 import { get } from "ol/proj";
 import { GeoJSON } from "ol/format";
@@ -14,6 +14,7 @@ import featureRequest from "./requests";
 
 import Popup from "./Popup/Popup";
 import MapElement from "./MapElement/MapElement";
+
 import "ol/ol.css";
 import "./App.scss";
 
@@ -24,24 +25,27 @@ const App: React.FC = () => {
     pind_m2: "",
   };
   const [map] = useState(new Map({}));
+  const [coords, setCoords] = useState<number[]>([]);
   const [popupData, setPopupData] = useState(initialPopupDataObj || undefined);
 
   const mapElement = useRef<HTMLDivElement>(null);
   const projection = get("EPSG:3301");
 
-  const vectorSource = new VectorSource();
-  const vector = new VectorLayer({
-    source: vectorSource,
-    style: new Style({
-      stroke: new Stroke({
-        color: "rgba(0, 0, 255, 1.0)",
-        width: 2,
+  const vectorSource = useMemo(() => new VectorSource(), []);
+  const vector = useMemo(
+    () =>
+      new VectorLayer({
+        source: vectorSource,
+        style: new Style({
+          stroke: new Stroke({
+            color: "rgba(0, 0, 255, 1.0)",
+            width: 2,
+          }),
+        }),
+        zIndex: 1,
       }),
-      // fill: new Fill({
-      //   color: "rgba(0, 0, 255, 1.0)",
-      // }),
-    }),
-  });
+    [vectorSource]
+  );
   const view = new View({
     center: [550000, 6520000],
     projection,
@@ -91,7 +95,11 @@ const App: React.FC = () => {
 
   const removeLayers = () => {
     const layers = [...map.getLayers().getArray()];
-    layers.forEach((layer) => map.removeLayer(layer));
+    layers.forEach((layer) => {
+      if (layer.constructor.name !== "VectorLayer") {
+        map.removeLayer(layer);
+      }
+    });
   };
 
   const activateLayer = (
@@ -105,29 +113,30 @@ const App: React.FC = () => {
   useMountEffect(initMap);
 
   useEffect(() => {
-    if (map) {
-      map.on("click", async (event) => {
-        const coords = event.coordinate;
-        map.removeLayer(vector);
-        vectorSource.clear();
-        const response = await featureRequest(coords);
-        const newFeature = new GeoJSON().readFeatures(response);
-        if (newFeature.length) {
-          const responseProps = response.features[0].properties;
-          const { l_aadress, pind_m2, ay_nimi } = responseProps;
-          setPopupData({ l_aadress, pind_m2, ay_nimi });
-          vectorSource.addFeatures(newFeature);
-          // zooms to vector:
-          // map.getView().fit(vectorSource.getExtent());
-          map.addLayer(vector);
-          modifyTooltip(coords);
-        } else {
-          setPopupData(initialPopupDataObj);
-          modifyTooltip();
-        }
-      });
+    map.on("click", async (event) => {
+      setCoords(event.coordinate);
+      map.removeLayer(vector);
+      vectorSource.clear();
+    });
+  }, [map, setCoords, vector, vectorSource]);
+
+  const handleMapClick = async () => {
+    const response = await featureRequest(coords);
+    const newFeature = new GeoJSON().readFeatures(response);
+    if (newFeature.length) {
+      const responseProps = response.features[0].properties;
+      const { l_aadress, pind_m2, ay_nimi } = responseProps;
+      setPopupData({ l_aadress, pind_m2, ay_nimi });
+      vectorSource.addFeatures(newFeature);
+      // zooms to vector:
+      // map.getView().fit(vectorSource.getExtent());
+      map.addLayer(vector);
+      modifyTooltip(coords);
+    } else {
+      setPopupData(initialPopupDataObj);
+      modifyTooltip();
     }
-  });
+  };
 
   return (
     <>
@@ -137,7 +146,7 @@ const App: React.FC = () => {
       </div>
       <Popup data={popupData}></Popup>
 
-      <MapElement mapElement={mapElement}></MapElement>
+      <MapElement mapElement={mapElement} mapClick={()=>handleMapClick()}></MapElement>
     </>
   );
 };
