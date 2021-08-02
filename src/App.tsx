@@ -50,7 +50,7 @@ const App: React.FC = () => {
     center: [550000, 6520000],
     projection,
     zoom: 9,
-    extent: [305744, 6323471.339593588, 805744, 6716528.660406412],
+    extent: [305744, 6323471, 805744, 6700528],
     minZoom: 9,
   });
   const tileLayer = new TileLayer({
