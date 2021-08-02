@@ -3,15 +3,17 @@ import { Map, View, Overlay } from "ol";
 import { get } from "ol/proj";
 import { GeoJSON } from "ol/format";
 import { Stroke, Style } from "ol/style";
-import { Tile as TileLayer, Vector as VectorLayer } from "ol/layer";
+import {
+  Tile as TileLayer,
+  Vector as VectorLayer,
+  Image as ImageLayer,
+} from "ol/layer";
 import TileGrid from "ol/tilegrid/TileGrid";
 import VectorSource from "ol/source/Vector";
 import XYZ from "ol/source/XYZ";
 import ImageWMS from "ol/source/ImageWMS";
-import { Image as ImageLayer } from "ol/layer";
 
 import featureRequest from "./requests";
-
 import Popup from "./Popup/Popup";
 import MapElement from "./MapElement/MapElement";
 
@@ -46,27 +48,35 @@ const App: React.FC = () => {
       }),
     [vectorSource]
   );
-  const view = new View({
-    center: [550000, 6520000],
-    projection,
-    zoom: 9,
-    extent: [305744, 6323471, 805744, 6700528],
-    minZoom: 9,
-  });
-  const tileLayer = new TileLayer({
-    source: new XYZ({
-      projection: "EPSG:3301",
-      url: "https://tiles.maaamet.ee/tm/tms/1.0.0/foto/{z}/{x}/{-y}.jpg&ASUTUS=MAAAMET&KESKKOND=LIVE&IS=XGIS",
-      tileGrid: new TileGrid({
-        extent: [40500, 5993000, 1064500, 7017000],
-        minZoom: 3,
-        resolutions: [
-          4000, 2000, 1000, 500, 250, 125, 62.5, 31.25, 15.625, 7.8125, 3.90625,
-          1.953125, 0.9765625, 0.48828125,
-        ],
+  const view = useMemo(
+    () =>
+      new View({
+        center: [550000, 6520000],
+        projection,
+        zoom: 9,
+        extent: [305744, 6323471, 805744, 6700528],
+        minZoom: 9,
       }),
-    }),
-  });
+    [projection]
+  );
+  const tileLayer = useMemo(
+    () =>
+      new TileLayer({
+        source: new XYZ({
+          projection: "EPSG:3301",
+          url: "https://tiles.maaamet.ee/tm/tms/1.0.0/foto/{z}/{x}/{-y}.jpg&ASUTUS=MAAAMET&KESKKOND=LIVE&IS=XGIS",
+          tileGrid: new TileGrid({
+            extent: [40500, 5993000, 1064500, 7017000],
+            minZoom: 3,
+            resolutions: [
+              4000, 2000, 1000, 500, 250, 125, 62.5, 31.25, 15.625, 7.8125,
+              3.90625, 1.953125, 0.9765625, 0.48828125,
+            ],
+          }),
+        }),
+      }),
+    []
+  );
   const imageLayer = new ImageLayer({
     source: new ImageWMS({
       url: "http://kaart.maaamet.ee/wms/alus?",
@@ -87,12 +97,12 @@ const App: React.FC = () => {
     }
   };
 
-  const initMap = () => {
+  useEffect(() => {
     map.setTarget(mapElement.current || "");
     map.addLayer(tileLayer);
     map.setView(view);
     return () => map.setTarget("");
-  };
+  }, [map, tileLayer, view]);
 
   const removeLayers = () => {
     const layers = [...map.getLayers().getArray()];
@@ -110,9 +120,6 @@ const App: React.FC = () => {
     map.addLayer(layer);
   };
 
-  const useMountEffect = (fun: React.EffectCallback) => useEffect(fun, []);
-  useMountEffect(initMap);
-
   useEffect(() => {
     map.on("click", async (event) => {
       setCoords(event.coordinate);
@@ -122,7 +129,7 @@ const App: React.FC = () => {
   }, [map, setCoords, vector, vectorSource]);
 
   const handleMapClick = async () => {
-    setCoords([])
+    setCoords([]);
     if (coords.length) {
       const response = await featureRequest(coords);
       const newFeature = new GeoJSON().readFeatures(response);
