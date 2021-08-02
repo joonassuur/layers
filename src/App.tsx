@@ -27,6 +27,7 @@ const App: React.FC = () => {
     pind_m2: "",
   };
   const [map] = useState(new Map({}));
+  const [isLoading, setLoading] = useState(false);
   const [coords, setCoords] = useState<number[]>([]);
   const [popupData, setPopupData] = useState(initialPopupDataObj || undefined);
 
@@ -77,7 +78,7 @@ const App: React.FC = () => {
       }),
     []
   );
-  const imageLayer = new ImageLayer({
+  const imageLayer1 = new ImageLayer({
     source: new ImageWMS({
       url: "http://kaart.maaamet.ee/wms/alus?",
       params: {
@@ -86,8 +87,17 @@ const App: React.FC = () => {
       },
     }),
   });
+  const imageLayer2 = new ImageLayer({
+    source: new ImageWMS({
+      url: "http://kaart.maaamet.ee/wms/fotokaart?",
+      params: {
+        LAYERS: "MA-FOTOKAART",
+        VERSION: "1.1.1",
+      },
+    }),
+  });
 
-  const modifyTooltip = (coords?: number[]) => {
+  const modifyTooltip = (coords?: number[]): void => {
     const newPopup = new Overlay({
       element: document.getElementById("popup") || undefined,
     });
@@ -101,6 +111,8 @@ const App: React.FC = () => {
     map.setTarget(mapElement.current || "");
     map.addLayer(tileLayer);
     map.setView(view);
+    map.on("rendercomplete", () => setLoading(false));
+
     return () => map.setTarget("");
   }, [map, tileLayer, view]);
 
@@ -116,6 +128,7 @@ const App: React.FC = () => {
   const activateLayer = (
     layer: ImageLayer<ImageWMS> | TileLayer<XYZ>
   ): void => {
+    setLoading(true);
     removeLayers();
     map.addLayer(layer);
   };
@@ -152,12 +165,18 @@ const App: React.FC = () => {
   return (
     <>
       <div className="button-overlay">
-        <button onClick={() => activateLayer(imageLayer)}>image layer</button>
+        <button onClick={() => activateLayer(imageLayer1)}>
+          image layer 1
+        </button>
+        <button onClick={() => activateLayer(imageLayer2)}>
+          image layer 2
+        </button>
         <button onClick={() => activateLayer(tileLayer)}>tile layer</button>
       </div>
       <Popup data={popupData}></Popup>
       <MapElement
         mapElement={mapElement}
+        isLoading={isLoading}
         mapClick={() => handleMapClick()}
       ></MapElement>
     </>
